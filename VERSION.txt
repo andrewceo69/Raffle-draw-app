@@ -1,0 +1,5 @@
+Raffle Draw Promotion App — Preservation Upgrade
+Version: 2026.08.26-no-base64
+Design reference: supplied Raffle dashboard image
+Base64 creator-image embedding: REMOVED
+Default mode: DEMO

@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% block title %}Raffle Dashboard{% endblock %}
+{% block content %}
+{% set c = campaigns[0] if campaigns else none %}
+{% if c %}{% set st = stats(c.id) %}
+<section class="dashboard-grid">
+  <div class="hero-show">
+    <div class="hero-copy">
+      <div class="badges"><span class="live">◆ LIVE CAMPAIGN</span><span>ENDS IN <b data-countdown="{{ c.closes_at }}">--:--:--</b></span></div>
+      <h1>WATCH, PLAY &amp; WIN</h1>
+      <div class="hero-prize">{{ money(c.prize_minor,c.currency) }}</div>
+      <h2>AND OTHER CASH PRIZES</h2>
+      <p>Watch my new video, play my song &amp; get a free promotional reward. Buy tickets to increase your eligible entries.</p>
+      <div class="hero-buttons"><a class="gradient-btn" href="{{ c.media_url }}" target="_blank" rel="noopener">▶ WATCH VIDEO</a><a class="cyan-btn" href="{{ c.media_url }}" target="_blank" rel="noopener">♫ PLAY SONG</a></div>
+      <div class="hero-meta"><span>by {{ c.creator_name }} ✓</span><span>{{ c.media_type|upper }} PROMOTION</span><a href="{{ url_for('campaign', cid=c.id) }}">OPEN SHOW ↗</a></div>
+    </div>
+    <div class="hero-art"><img src="{{ c.cover_url or c.avatar }}" alt="{{ c.creator_name }}"><div class="play-ring">▶</div></div>
+  </div>
+  <aside class="meter-card">
+    <div class="card-title">BUSINESS METER <span>ⓘ</span></div>
+    <div class="meter-state {{ st.state|lower }}">● {{ st.state }}</div>
+    <p>{% if st.state == 'WINNING' %}Your ticket sales currently cover the expected prize and configured costs.{% elif st.state == 'WATCH' %}Your campaign is approaching the configured economic target.{% else %}Sales are below the safe economic target. Keep watching the campaign position.{% endif %}</p>
+    <div class="gauge" style="--pct:{{ [st.pct,150]|min }}"><div class="gauge-value">{{ st.pct }}%<small>ECONOMIC TARGET</small></div></div>
+    <div class="gauge-total">{{ money(st.revenue,c.currency) }} / {{ money(st.target,c.currency) }}</div>
+    <a class="wide-btn" href="#analytics">▥ &nbsp; View Full Breakdown &nbsp;›</a>
+  </aside>
+</section>
+
+<section class="ticket-card" id="tickets">
+  <div class="section-head"><div><b>LIVE TICKET POOL</b><small>Visual animation only — server-side ticket pool remains authoritative.</small></div><a href="{{ url_for('campaign', cid=c.id) }}">View All Tickets ⟳</a></div>
+  <div class="ticket-row">{% for t in ([{'number':'18492'},{'number':'72015'},{'number':'30944'},{'number':'88103'},{'number':'45921'}] if not st.tickets else []) %}<span class="ticket t{{loop.index}}">{{t.number}}</span>{% endfor %}{% if st.tickets %}{% for num in ['18492','72015','30944','88103','45921'] %}<span class="ticket t{{loop.index}}">{{num}}</span>{% endfor %}{% endif %}</div>
+  <div class="rolling"><i></i> Tickets are rolling in...</div>
+</section>
+
+<section class="stat-row">
+  <div class="stat"><small>TOTAL TICKETS SOLD</small><strong>{{ st.tickets }}</strong><span>/ {{ '{:,}'.format(st.target_tickets) }} Target</span><div class="mini-progress"><i style="width:{{ [((st.tickets / st.target_tickets) * 100 if st.target_tickets else 0),100]|min }}%"></i></div></div>
+  <div class="stat"><small>TOTAL REVENUE</small><strong>{{ money(st.revenue,c.currency) }}</strong><span>From ticket sales</span><div class="spark">⌁⌁⌁</div></div>
+  <div class="stat"><small>FREE REWARDS CLAIMED</small><strong>{{ [st.free_rewards, c.free_reward_count]|max }}</strong><span>Users engaged</span><div class="spark">⌁⌁⌁</div></div>
+  <div class="stat"><small>TOTAL WINNERS</small><strong>{{ st.winners }}</strong><span>{% if st.winners %}Draw completed{% else %}Draw not started{% endif %}</span><div class="spark purple">⌁⌁⌁</div></div>
+  <div class="stat"><small>WALLET BALANCE</small><strong>{{ money(viewer.wallet_minor if viewer else 0,c.currency) }}</strong><span>Demo available balance</span><div class="wallet-icon">▣</div></div>
+</section>
+
+<section class="three-panels" id="analytics">
+  <div class="panel show-overview" id="shows"><div class="panel-head"><b>SHOW OVERVIEW</b><a href="{{ url_for('campaign', cid=c.id) }}">Open Show ›</a></div><div class="overview-media"><img src="{{ c.cover_url or c.avatar }}"><div><h3>{{ c.title }}</h3><p>by {{ c.creator_name }} <span class="live-dot">● LIVE</span></p></div></div><dl><dt>Show Type</dt><dd>{{ c.media_type|capitalize }}</dd><dt>Ticket Price</dt><dd>{{ money(c.ticket_minor,c.currency) }}</dd><dt>Free Reward</dt><dd class="green">Enabled</dd><dt>Sales Target</dt><dd>{{ '{:,}'.format(c.target_tickets) }} Tickets</dd><dt>Sales Threshold</dt><dd>{{ c.threshold }}%</dd><dt>Total Prize Pool</dt><dd>{{ money(c.prize_minor,c.currency) }}</dd><dt>Campaign Duration</dt><dd>{{ c.duration_hours }} Hours</dd></dl></div>
+  <div class="panel tiers" id="winners"><div class="panel-head"><b>WINNER TIERS</b><a href="{{ url_for('campaign', cid=c.id) }}">View Draw</a></div>{% for rank,amount in c.winner_tiers.split(',') %}<div class="tier"><span>🏆</span>{{ rank }}{% if rank == '1' %}st{% elif rank == '2' %}nd{% elif rank == '3' %}rd{% else %}th{% endif %} Winner <b>{{ money((amount|float * 100)|int,c.currency) }}</b></div>{% endfor %}<div class="pool-total">Total Prize Pool <b>{{ money(c.prize_minor,c.currency) }}</b></div></div>
+  <div class="panel actions" id="promotions"><div class="panel-head"><b>CAMPAIGN ACTIONS</b></div><a class="action purple" href="{{ url_for('campaign', cid=c.id) }}">♟ <span>Promote My Show<small>Get more audience &amp; tickets</small></span></a><a class="action blue" href="{{ url_for('campaign', cid=c.id) }}">⌯ <span>Share Show Link<small>/c/{{ c.slug }}</small></span></a><a class="action cyan" href="#analytics">▥ <span>View Analytics<small>Detailed campaign stats</small></span></a><a class="action orange" href="{{ url_for('admin') }}">↻ <span>Reset Configuration<small>Start over / Safe reset</small></span></a></div>
+</section>
+
+<section class="quick-panel" id="wallet"><div class="panel-head"><b>QUICK ACTIONS</b></div><div class="quick-grid"><a href="{{ url_for('campaign', cid=c.id) }}#funds">▣<span>Add Funds<small>Demo wallet controls</small></span></a><a href="{{ url_for('campaign', cid=c.id) }}">◉<span>Buy Tickets<small>Get more entries</small></span></a><a href="{{ url_for('campaign', cid=c.id) }}#tickets">▤<span>My Tickets<small>View my tickets</small></span></a><a href="#messages">♟<span>Notifications<small>{{ unread }} unread</small></span></a><a href="#tutorials">▶<span>Help Center<small>Tutorials &amp; how-to</small></span></a></div></section>
+
+<section class="bottom-callout" id="messages"><div>🔔 <b>DON'T MISS OUT!</b><span>Your chance is waiting. Pick your ticket now and stay in the show.</span><a href="{{ url_for('campaign', cid=c.id) }}">GET YOUR TICKET 🎟</a></div><div>⚙ <b>NOTIFICATIONS SETTINGS</b><span>Reminder rules are configurable from the Control Room.</span></div></section>
+
+<section class="tutorial-section" id="tutorials"><div class="panel-head"><div><b>TUTORIALS &amp; HOW-TO</b><small>Admin-controlled URLs — no tutorial video needs to be stored in the app.</small></div><a href="{{ url_for('admin') }}">Manage Tutorials ›</a></div><div class="tutorial-grid">{% for t in tutorials %}<div class="tutorial-card"><img src="{{ t.thumbnail_url or c.cover_url or c.avatar }}"><div><span>{{ t.category }}</span><h3>{{ t.title }}</h3><p>{{ t.description }}</p><form method="post" action="{{ url_for('tutorial_view', tutorial_id=t.id) }}"><button class="gradient-btn" type="submit">▶ WATCH TUTORIAL</button></form></div></div>{% else %}<div class="panel">No tutorials published yet.</div>{% endfor %}</div></section>
+
+<section class="journey"><h2>USER JOURNEY</h2><div class="phone-row"><div class="phone"><small>9:31</small><h4>Discover</h4><div class="phone-search">⌕ Search shows...</div><img src="{{c.cover_url or c.avatar}}"><b>{{ c.creator_name }}<br>{{ c.title }}</b><p>Play the external {{ c.media_type }} &amp; claim your promotional reward. Win up to {{money(c.prize_minor,c.currency)}}.</p><strong>{{money(c.prize_minor,c.currency)}}</strong><button>▶ PLAY &amp; GET REWARD</button></div><div class="phone"><small>9:31</small><h4>Now Playing</h4><div class="disc">▶</div><b>{{ c.title }}</b><p>{{ c.creator_name }}</p><button>CLAIM REWARD</button></div><div class="phone"><small>9:31</small><h4>Buy Tickets</h4><div class="qty">− &nbsp; 5 &nbsp; +</div><b class="green">{{money(c.ticket_minor*5,c.currency)}}</b><p>Your Wallet Balance<br><b>{{money(viewer.wallet_minor if viewer else 0,c.currency)}}</b></p><button>BUY TICKETS</button></div><div class="phone"><small>9:31</small><h4>My Tickets</h4><div class="mini-ticket">18492</div><div class="mini-ticket blue">72015</div><div class="mini-ticket pink">30944</div><button>VIEW MY TICKETS</button></div><div class="phone"><small>9:31</small><h4>Draw in Progress</h4><div class="draw-ring">◎</div><b>Selecting Winner...</b><p>Secure server-side draw. Good luck! 🍀</p></div><div class="phone winner-phone"><small>9:31</small><h4>Congratulations!</h4><div class="money-art">💵</div><strong>{{money(c.prize_minor,c.currency)}}</strong><p>Winner wallet credited.<br>Feedback is required before withdrawal.</p><button>WINNER EXPERIENCE</button></div></div></section>
+{% else %}<section class="empty-state"><h1>Create your first Raffle Show</h1><p>The polished dashboard is ready. Publish a show to begin.</p><a class="gradient-btn" href="{{ url_for('new_campaign') }}">＋ CREATE NEW SHOW</a></section>{% endif %}
+{% endblock %}

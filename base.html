@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{% block title %}Raffle — Watch, Play & Win{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head><body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('home') }}"><span class="brand-star">★</span><span>Raffle<small>Play, Win & Get Paid</small></span></a>
+    <a class="create-btn" href="{{ url_for('new_campaign') }}"><b>＋</b> Create New Show</a>
+    <nav class="side-nav">
+      <a class="active" href="{{ url_for('home') }}">⌂ <span>Dashboard</span></a>
+      <a href="{{ url_for('home') }}#shows">▣ <span>My Shows</span></a>
+      <a href="{{ url_for('home') }}#campaigns">♢ <span>Campaigns</span></a>
+      <a href="{{ url_for('home') }}#tickets">🎟 <span>Tickets</span></a>
+      <a href="{{ url_for('home') }}#wallet">▱ <span>Wallet</span></a>
+      <a href="{{ url_for('home') }}#analytics">▥ <span>Analytics</span></a>
+      <a href="{{ url_for('home') }}#promotions">✧ <span>Promotions</span></a>
+      <a href="{{ url_for('home') }}#messages">✉ <span>Messages {% if unread %}<i>{{ unread if unread < 100 else '99+' }}</i>{% endif %}</span></a>
+      <a href="{{ url_for('home') }}#winners">♕ <span>Winners</span></a>
+      <a href="{{ url_for('home') }}#payouts">▤ <span>Payouts</span></a>
+      <a href="{{ url_for('admin') }}">⚙ <span>Settings</span></a>
+      <a href="{{ url_for('home') }}#tutorials">▶ <span>Tutorials</span></a>
+      <a href="{{ url_for('home') }}#support">? <span>Support</span></a>
+    </nav>
+    <div class="side-bottom"><a class="reset-side" href="{{ url_for('admin') }}">↻ RESET CONFIGURATION</a><span>Safe reset preserves financial history</span></div>
+  </aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div class="mobile-brand"><span class="brand-star">★</span> Raffle</div>
+      <div class="search">⌕ <span>Search campaigns, artists, tickets...</span></div>
+      <div class="top-actions"><div class="country">🇳🇬 Nigeria &nbsp; NGN⌄</div><div class="mode-chip {{ app_mode }}">{{ app_mode|upper }} MODE</div><div class="bell">♧{% if unread %}<b>{{ unread if unread < 100 else '99+' }}</b>{% endif %}</div><div class="user-mini"><img src="{{ url_for('static', filename='sample_creator.jpg') }}"><span>Artist X<small>Creator</small></span>⌄</div></div>
+    </header>
+    <main class="content">
+      {% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}{% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script>
+(function(){
+  const nodes=document.querySelectorAll('[data-countdown]');
+  nodes.forEach(node=>{
+    const target=new Date(node.dataset.countdown).getTime();
+    function tick(){
+      let diff=Math.max(0,target-Date.now());
+      const d=Math.floor(diff/86400000); diff%=86400000;
+      const h=Math.floor(diff/3600000); diff%=3600000;
+      const m=Math.floor(diff/60000); const s=Math.floor((diff%60000)/1000);
+      node.textContent=(d?String(d).padStart(2,'0')+' DAYS ':'')+[h,m,s].map(x=>String(x).padStart(2,'0')).join(':');
+    }
+    tick(); setInterval(tick,1000);
+  });
+})();
+</script>
+</body></html>
